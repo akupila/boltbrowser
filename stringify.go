@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"unicode/utf8"
 )
@@ -9,6 +11,9 @@ import (
 // stringify ensures that we can print only valid characters.
 // It's wrong to assume that everything is a string, since BoltDB is typeless.
 func stringify(v []byte) string {
+	if j, ok := stringifyJSON(v); ok {
+		return "\n" + j
+	}
 	if utf8.Valid(v) {
 		ok := true
 		for _, r := range string(v) {
@@ -29,4 +34,15 @@ func stringify(v []byte) string {
 	}
 
 	return fmt.Sprintf("%x", v)
+}
+
+func stringifyJSON(v []byte) (string, bool) {
+	if !json.Valid(v) {
+		return "", false
+	}
+	var out bytes.Buffer
+	if err := json.Indent(&out, v, "", "  "); err != nil {
+		return "", false
+	}
+	return out.String(), true
 }

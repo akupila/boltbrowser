@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/br0xen/termbox-util"
-	"github.com/nsf/termbox-go"
+	termboxUtil "github.com/br0xen/termbox-util"
+	termbox "github.com/nsf/termbox-go"
 )
 
 /*
@@ -598,7 +598,7 @@ func (screen *BrowserScreen) drawRightPane(style Style) {
 				keyString := fmt.Sprintf("Key: %s", stringify([]byte(p.key)))
 				startY += screen.drawMultilineText(keyString, 5, startX, startY, (w/2)-1, style.defaultFg, style.defaultBg)
 				valString := fmt.Sprintf("Value: %s", stringify([]byte(p.val)))
-				startY += screen.drawMultilineText(valString, 7, startX, startY, (w/2)-1, style.defaultFg, style.defaultBg)
+				startY += screen.drawMultilineText(valString, 0, startX, startY, (w/2)-1, style.defaultFg, style.defaultBg)
 			}
 		} else {
 			pathString := fmt.Sprintf("Path: %s", strings.Join(screen.currentPath, " → "))
@@ -910,18 +910,17 @@ func (screen *BrowserScreen) startExportJSON() bool {
 // Returns the number of lines used
 func (screen *BrowserScreen) drawMultilineText(msg string, indentPadding, startX, startY, maxWidth int, fg, bg termbox.Attribute) int {
 	var numLines int
-	spacePadding := strings.Repeat(" ", indentPadding)
-	// First we need to split 'msg' into the lines it should have (split on '\n')
-	msgs := strings.Split(msg, "\n")
-	for _, msg = range msgs {
-		for len(msg) > maxWidth {
-			termboxUtil.DrawStringAtPoint(msg[:maxWidth-1], startX, (startY + numLines), fg, bg)
-			msg = spacePadding + msg[maxWidth-1:]
-			numLines++
+	lines := strings.Split(msg, "\n")
+	for i, m := range lines {
+		if i > 0 {
+			m = strings.Repeat(" ", indentPadding) + m
 		}
+		if len(m) > maxWidth {
+			m = m[:maxWidth-1]
+		}
+		termboxUtil.DrawStringAtPoint(m, startX, (startY + numLines), fg, bg)
+		numLines++
 	}
-	termboxUtil.DrawStringAtPoint(msg, startX, (startY + numLines), fg, bg)
-	numLines++
 	return numLines
 }
 
